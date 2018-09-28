@@ -45,6 +45,21 @@ Page({
   },
   onLoad(){
     this.getNow()
+    wx.getSetting({
+      success:res=>{
+        let auth=res.authSetting[
+          'scope.userLocation'
+        ]
+        this.setData({
+          locationAuthType:auth?AUTHORIZED:(auth==false)?UNAUTHORIZED:UNPROMPTED,
+          loactionTipsText:auth?AUTHORIZED_TIPS:(auth==false)?UNAUTHORIZED_TIPS:UNPROMPTED_TIPS
+        })
+        if(auth)
+          this.getCityAndWeather()
+        else
+          this.getNow()
+      }
+    })
     this.qqmapsdk = new QQMapWX({
       key: '5AIBZ-ELK33-BSI3H-35PC6-66KN2-J5FKU'
     });
@@ -114,11 +129,20 @@ onTapDayWeather(){
 //获取位置信息
 onTapLocation(){
   if (this.data.locationAuthType === UNAUTHORIZED)
-    wx.openSetting()
+  //openSetting里回调函数，并且在回调函数的参数中可以看到用户是否已经打开或关闭某个权限
+    wx.openSetting({
+      success:res=>{
+        //console.log(res)
+        let auth=res.authSetting["scope.userLocation"]
+        if(auth){
+          this.getCityAndWeather()
+        }
+      }
+    })
     else
-     this.getLocation()
+    this.getCityAndWeather()
 },
-  getLocation() {
+  getCityAndWeather() {
     wx.getLocation({
       success: res => {
         this.setData({
